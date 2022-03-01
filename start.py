@@ -996,9 +996,7 @@ if __name__ == '__main__':
                 event.set()
                 ts = time.time()
                 while time.time() < ts + timer:
-                    print('Attacking ' + ((str(host) + ':' + str(url.port or 80)) if host and url else str(argv[2])) + ' with ' + one + ' method')
-                    print('Requests sent: ' + str(requests_sent))
-                    print(str(round((time.time() - ts) / timer * 100, 2)) + '%')
+                    print('Attacking \033[34m' + ((str(host) + '\033[0m:\033[33m' + str(url.port or 80)) if host and url else str(argv[2])) + '\033[0m with \033[35m' + one + '\033[0m method; Requests sent: \033[36m' + str(requests_sent) + '\033[0m; ' + str(round((time.time() - ts) / timer * 100, 2)) + '%')
                     sleep(1)
                 event.clear()
                 exit()
