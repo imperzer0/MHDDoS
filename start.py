@@ -1115,7 +1115,7 @@ if __name__ == '__main__':
                         (str(host) + '\033[0m:\033[33m' + str(url.port or 80)) if host and url else str(argv[2])) +
                           '\033[0m with \033[35m' + one + '\033[0m method; Requests sent: \033[32m' +
                           str(requests_sent) + '\033[0m; Requests failed: \033[31m' + str(requests_failed) +
-                          '\033[0m; ' + str(round((time.time() - ts) / timer * 100, 2)) + '%')
+                          '\033[0m; Time: ' + str(round((time.time() - ts) / timer * 100, 2)) + '%')
                     sleep(1)
                 event.clear()
                 exit()
