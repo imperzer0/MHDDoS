@@ -1377,6 +1377,8 @@ class ToolsConsole:
         return {"success": False}
 
 
+threads_list = []
+
 if __name__ == '__main__':
     with open(currentDir / "config.json") as f:
         con = load(f)
@@ -1484,7 +1486,8 @@ if __name__ == '__main__':
                         if not ref: exit("\033[31mEmpty Reflector File \033[0m")
 
                     for _ in range(threads):
-                        Thread(target=Layer4, args=((target, port), ref, method, event,), daemon=True).start()
+                        th = Thread(target=Layer4, args=((target, port), ref, method, event,), daemon=True)
+                        threads_list.append(th)
 
                 print("\033[32mAttack Started !\033[0m")
                 event.set()
@@ -1496,6 +1499,10 @@ if __name__ == '__main__':
                           str(requests_sent) + '\033[0m; Requests failed: \033[31m' + str(requests_failed) +
                           '\033[0m; Time: ' + str(round((time.time() - ts) / timer * 100, 2)) + '%')
                     sleep(1)
+                for th in threads_list:
+                    if th.is_alive():
+                        th.kill()
                 event.clear()
-                exit()
+                exit(0)
             ToolsConsole.usage()
+exit(0)
