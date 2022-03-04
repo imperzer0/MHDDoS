@@ -90,6 +90,9 @@ class Counter(object):
             self._value.value = value
         return self
 
+    def get(self):
+        return self._value.value
+
 
 requests_sent = Counter()
 requests_failed = Counter()
@@ -1219,7 +1222,7 @@ class ProxyManager:
         providrs = [provider for provider in cf["proxy-providers"] if
                     provider["type"] == Proxy_type or Proxy_type == 0]
         logger.info("Downloading Proxies form %d Providers" % len(providrs))
-        proxes:Set[Proxy] = set()
+        proxes: Set[Proxy] = set()
 
         with ThreadPoolExecutor(len(providrs)) as executor:
             future_to_download = {
@@ -1238,7 +1241,7 @@ class ProxyManager:
         logger.debug("Downloading Proxies form (URL: %s, Type: %s, Timeout: %d)" % (provider["url"],
                                                                                     proxy_type.name,
                                                                                     provider["timeout"]))
-        proxes:Set[Proxy] = set()
+        proxes: Set[Proxy] = set()
         with suppress(TimeoutError, exceptions.ConnectionError, exceptions.ReadTimeout):
             data = get(provider["url"], timeout=provider["timeout"]).text
             try:
@@ -1594,13 +1597,14 @@ if __name__ == '__main__':
                 logger.info("Attack Started to %s with %s method for %s seconds, threads: %d!" %
                             (target or url.human_repr(), method, timer, threads))
                 event.set()
-                ts = time.time()
-                while time.time() < ts + timer:
+                ts = time()
+                while time() < ts + timer:
                     print('Attacking \033[34m' + (
                         (str(host) + '\033[0m:\033[33m' + str(url.port or 80)) if host and url else str(argv[2])) +
                           '\033[0m with \033[35m' + one + '\033[0m method; Requests sent: \033[32m' +
-                          str(requests_sent) + '\033[0m; Requests failed: \033[31m' + str(requests_failed) +
-                          '\033[0m; Bytes ' + str(bytes_sent) + '; Time: ' + str(round((time.time() - ts) / timer * 100, 2)) + '%')
+                          str(requests_sent.get()) + '\033[0m; Requests failed: \033[31m' + str(requests_failed.get()) +
+                          '\033[0m; Bytes sent ' + str(bytes_sent.get()) + '; Time: ' +
+                          str(round((time() - ts) / timer * 100, 2)) + '%')
                     bytes_sent.set(0)
                     sleep(1)
                 for th in threads_list:
